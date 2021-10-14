@@ -1,0 +1,25 @@
+{
+	"compileOnSave": true,
+	"compilerOptions": {
+		"alwaysStrict": true,
+		"lib": ["esnext"],
+		"module": "commonjs",
+		"noUnusedParameters": true,
+		"allowJs": true,
+		"sourceMap": true,
+		"moduleResolution": "node",
+		"noUnusedLocals": true,
+		"removeComments": false,
+		"target": "es2020",
+		"importsNotUsedAsValues": "error",
+		"strictNullChecks": true,
+		"outDir": ".build",
+		"rootDir": "./",
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"skipLibCheck": true
+	},
+	"exclude": ["node_modules", "tests"],
+	"include": ["src", "typings"]
+}
