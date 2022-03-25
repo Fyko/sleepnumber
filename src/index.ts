@@ -1,57 +1,67 @@
-import type { APIGatewayProxyEvent, APIGatewayProxyHandler } from 'aws-lambda';
-import fetch from 'node-fetch';
-import { headers, Routes } from './constants';
-import type { POSTSetSleepNumberJSONBody } from './types';
-const { API_KEY } = process.env;
+import { Hono } from 'hono';
+import { basicAuth } from 'hono/basic-auth';
+import { logger } from 'hono/logger';
+import { Cookie, parse, splitCookiesString } from 'set-cookie-parser';
+import { Routes } from './constants';
+import type { LoginResponse, POSTSetSleepNumberJSONBody } from './types';
 
-const isAuthorized = (event: APIGatewayProxyEvent) => {
-	console.dir(event.queryStringParameters);
-	const key = Reflect.get(event.queryStringParameters ?? { api_key: '' }, 'api_key');
-	if (key === API_KEY) return true;
-	return false;
-};
+declare const API_USERNAME: string;
+declare const API_PASSWORD: string;
+declare const SLEEPNUMBER_EMAIL: string;
+declare const SLEEPNUMBER_PASSWORD: string;
 
-const login = async () => {
+export const app = new Hono();
+
+app.use(
+	'*',
+	basicAuth({
+		username: API_USERNAME,
+		password: API_PASSWORD,
+	}),
+);
+app.use('*', logger());
+
+const login = async (): Promise<[LoginResponse, Cookie[]]> => {
+	const body = JSON.stringify({ login: SLEEPNUMBER_EMAIL, password: SLEEPNUMBER_PASSWORD });
 	const res = await fetch('https://prod-api.sleepiq.sleepnumber.com/rest/login', {
 		method: 'PUT',
-		headers,
-		body: JSON.stringify({ login: 'me@fyko.net', password: 'YX9GJrJL9mel%^Ln' }),
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body,
 	});
 
-	const body = (await res.json()) as {
-		cognitoUser: true;
-		userId: string;
-		key: string;
-		registrationState: number;
-		edpLoginStatus: number;
-		edpLoginMessage: 'not used';
-	};
+	const header = res.headers.get('Set-Cookie') ?? '';
+	// we have to split the Set-Cookie header into multiple
+	// strings because they get joined
+	const split = splitCookiesString(header)
+	const parsed = parse(split);
 
-	return body;
+	const data: LoginResponse = (await res.json());
+
+	return [data, parsed];
 };
 
-export const setSleepNumber: APIGatewayProxyHandler = async (event) => {
-	const authorized = isAuthorized(event);
-	if (!authorized) return { statusCode: 401, body: '' };
-
-	const body: POSTSetSleepNumberJSONBody = JSON.parse(event.body!);
-	const loginRes = await login();
+// Routing
+app.post('/api/sleepnumber', async (c) => {
+	const body: POSTSetSleepNumberJSONBody = await c.req.json();
+	const [loginRes, cookies] = await login();
 	console.dir(loginRes);
-	const key = Reflect.get(loginRes, 'key');
-	if (!key)
-		return {
-			statusCode: 500,
-			body: 'Malformed login object.',
-			headers: {
-				'Content-Type': 'text/html',
-			},
-		};
+	const key = loginRes.key;
+
+	if (!key) {
+		c.status(500);
+		return c.text('Malformed login object');
+	}
 
 	const url = `${Routes.setSleepNumber(body.bed_id)}?_k=${key}&side=${body.side}`;
 	console.log(`Fetching ${url}`);
 	const res = await fetch(url, {
 		method: 'PUT',
-		headers,
+		headers: {
+			'Cookie': cookies.map((c) => `${c.name}=${c.value}`).join('; '),
+			'Content-Type': 'application/json',
+		},
 		body: JSON.stringify({
 			side: body.side,
 			sleepNumber: body.sleep_number,
@@ -62,22 +72,15 @@ export const setSleepNumber: APIGatewayProxyHandler = async (event) => {
 		const body = await res.json();
 		console.log(`response status and body: ${res.statusText}`);
 		console.dir(body);
-	} catch {}
+	} catch { }
 
-	if (res.ok)
-		return {
-			statusCode: 200,
-			body: `Adjusting the ${body.side === 'L' ? 'left' : 'right'} side to ${body.sleep_number}.`,
-			headers: {
-				'Content-Type': 'text/html',
-			},
-		};
+	if (res.ok) {
+		c.status(200);
+		return c.text(`Adjusting the ${body.side === 'L' ? 'left' : 'right'} side to ${body.sleep_number}.`);
+	}
 
-	return {
-		statusCode: 500,
-		body: `Failed to adjust the ${body.side === 'L' ? 'left' : 'right'} side to ${body.sleep_number}.`,
-		headers: {
-			'Content-Type': 'text/html',
-		},
-	};
-};
+	c.status(500);
+	return c.text(`Failed to adjust the ${body.side === 'L' ? 'left' : 'right'} side to ${body.sleep_number}.`);
+});
+
+app.fire();

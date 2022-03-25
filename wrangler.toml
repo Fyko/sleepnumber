@@ -1,0 +1,8 @@
+name= "sleepnumber"
+workers_dev = true
+main="./dist/index.js"
+
+compatibility_date = "2022-03-25"
+
+[build]
+command = "yarn run build"

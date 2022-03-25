@@ -3,3 +3,12 @@ export interface POSTSetSleepNumberJSONBody {
 	side: 'R' | 'L';
 	sleep_number: number;
 }
+
+export interface LoginResponse {
+	cognitoUser: true;
+	userId: string;
+	key: string;
+	registrationState: number;
+	edpLoginStatus: number;
+	edpLoginMessage: 'not used';
+}
