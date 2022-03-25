@@ -1,0 +1,37 @@
+{
+    "name": "sleepnumber",
+    "version": "0.2.0",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "esbuild --bundle --sourcemap --minify --outdir=dist ./src/index.ts",
+        "lint": "eslint --ext .ts,.js --fix ./src",
+        "dev": "miniflare --live-reload --debug --env .env.local",
+        "deploy": "npx wrangler@beta publish"
+    },
+    "author": "Carter Himmel <fyko@sycer.dev>",
+    "license": "MIT",
+    "dependencies": {
+        "hono": "^0.5.3",
+        "set-cookie-parser": "^2.4.8",
+        "undici": "^4.16.0"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^3.4.0",
+        "@types/cookie": "^0.4.1",
+        "@types/set-cookie-parser": "^2.4.2",
+        "@typescript-eslint/eslint-plugin": "^5.16.0",
+        "@typescript-eslint/parser": "^5.16.0",
+        "esbuild": "^0.14.23",
+        "eslint": "^8.11.0",
+        "eslint-config-marine": "^9.3.2",
+        "eslint-config-prettier": "^8.5.0",
+        "eslint-plugin-prettier": "^4.0.0",
+        "miniflare": "^2.3.0",
+        "prettier": "^2.6.1",
+        "typescript": "^4.6.3"
+    },
+    "packageManager": "yarn@3.2.0",
+    "volta": {
+        "node": "16.14.2"
+    }
+}
