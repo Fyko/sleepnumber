@@ -61,7 +61,7 @@ app.post('/api/sleepnumber', async (c) => {
 	const res = await fetch(`${Routes.sleepNumber(body.bed_id)}?${query}`, {
 		method: 'PUT',
 		headers: {
-			'Cookie': cookies.map((c) => `${c.name}=${c.value}`).join('; '),
+			Cookie: cookies.map((c) => `${c.name}=${c.value}`).join('; '),
 			'Content-Type': 'application/json',
 		},
 		body: JSON.stringify({
