@@ -42,6 +42,33 @@ const login = async (): Promise<[LoginResponse, Cookie[]]> => {
 	return [data, parsed];
 };
 
+app.get('/api/beds', async (c) => {
+	const [loginRes, cookies] = await login();
+	const key = loginRes.key;
+
+	if (!key) {
+		c.status(500);
+		return c.text('Malformed login object');
+	}
+
+	const query = new URLSearchParams();
+	query.set('_k', key);
+
+	const url = `${Routes.bed}?${query}`;
+	console.log(url);
+	const res = await fetch(url, {
+		method: 'GET',
+		headers: {
+			Cookie: cookies.map((c) => `${c.name}=${c.value}`).join('; '),
+		},
+	});
+
+	const data: object = await res.json();
+	console.log(data);
+
+	return c.json(data);
+});
+
 // Routing
 app.post('/api/sleepnumber', async (c) => {
 	const body: POSTSetSleepNumberJSONBody = await c.req.json();
