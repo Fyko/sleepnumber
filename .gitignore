@@ -3,3 +3,4 @@ node_modules
 worker
 yarn.lock
 .env*
+.yarn/install-state.gz
