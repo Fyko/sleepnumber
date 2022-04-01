@@ -1,3 +1,7 @@
+export const API_BASE = 'https://prod-api.sleepiq.sleepnumber.com/rest';
+
 export const Routes = {
-	setSleepNumber: (bed: string) => `https://prod-api.sleepiq.sleepnumber.com/rest/bed/${bed}/sleepNumber`,
+	login: `${API_BASE}/login`,
+	sleepNumber: (bed: string) => `${API_BASE}/bed/${bed}/sleepNumber`,
+
 };

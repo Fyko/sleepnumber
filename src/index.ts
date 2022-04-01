@@ -54,9 +54,11 @@ app.post('/api/sleepnumber', async (c) => {
 		return c.text('Malformed login object');
 	}
 
-	const url = `${Routes.setSleepNumber(body.bed_id)}?_k=${key}&side=${body.side}`;
-	console.log(`Fetching ${url}`);
-	const res = await fetch(url, {
+	const query = new URLSearchParams();
+	query.set('_k', key);
+	query.set('side', body.side);
+
+	const res = await fetch(`${Routes.sleepNumber(body.bed_id)}?${query}`, {
 		method: 'PUT',
 		headers: {
 			'Cookie': cookies.map((c) => `${c.name}=${c.value}`).join('; '),
